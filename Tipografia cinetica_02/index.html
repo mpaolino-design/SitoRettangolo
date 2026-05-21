@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Martello</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Chokokutai&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #1a1a2e; }
+    canvas { display: block; width: 100%; height: 100%; }
+    #controls { position: fixed; top: 20px; left: 20px; z-index: 10; display: flex; align-items: center; gap: 10px; }
+    #controls label { color: rgba(255,255,255,0.7); font: 14px sans-serif; cursor: pointer; user-select: none; white-space: nowrap; }
+    #controls span { color: rgba(255,255,255,0.5); font: 12px sans-serif; min-width: 30px; text-align: center; }
+    #controls input[type="range"] { width: 100px; accent-color: #6bcb77; cursor: pointer; }
+    #controls input[type="checkbox"] { width: 18px; height: 18px; cursor: pointer; accent-color: #6bcb77; }
+  </style>
+  <style>
+    .back-link { position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:99999; font-family:'Anton',sans-serif; font-size:14px; color:#F2071B; text-decoration:none; padding:6px 16px; border:2px solid #F2071B; border-radius:999px; background:transparent; transition:background 0.2s,color 0.2s; }
+    .back-link:hover { background:#F2071B; color:#fff; }
+  </style>
+</head>
+<body>
+<a class="back-link" href="../index.html">← Homepage</a>
+<div id="controls">
+  <input type="checkbox" id="autoToggle">
+  <label for="autoToggle">Auto</label>
+  <label for="sizeSlider">Size</label>
+  <input type="range" id="sizeSlider" min="0.4" max="1.8" step="0.05" value="1.0">
+  <span id="sizeValue">1.0</span>
+</div>
+<canvas id="canvas"></canvas>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+let W, H;
+
+const WORD = 'martello';
+
+const LETTERS = WORD.split('').map((char, i) => {
+  return {
+    char,
+    index: i,
+    edge: 'down',
+    col: i,
+    phase: 'idle',
+    progress: 0,
+    active: false,
+    duration: 800,
+    sub: 0,
+    vibrateUntil: 0,
+  };
+});
+
+LETTERS[1].edge = 'up';
+LETTERS[3].edge = 'up';
+LETTERS[5].edge = 'up';
+LETTERS[6].edge = 'up';
+LETTERS[6].col = 5;
+LETTERS[6].sub = 1;
+LETTERS[7].col = 6;
+
+function mapSpeed(delta) {
+  const t = Math.max(200, Math.min(1500, delta));
+  const minAnim = 400;
+  const maxAnim = 1400;
+  const ratio = (t - 200) / 1300;
+  return minAnim + (maxAnim - minAnim) * ratio;
+}
+
+let lastKeyTime = 0;
+let currentLetterIndex = 0;
+let tremble = { active: false, intensity: 0, decay: 0.92 };
+
+let sizeMultiplier = 1.0;
+let autoMode = false;
+let autoTimer = null;
+
+
+function startLetter(index, delta) {
+  if (index >= LETTERS.length) return;
+  const l = LETTERS[index];
+  if (l.active) return;
+  l.active = true;
+  l.phase = 'windup';
+  l.progress = 0;
+  l.duration = mapSpeed(delta);
+}
+
+function resetAll() {
+  LETTERS.forEach(l => {
+    l.active = false;
+    l.phase = 'idle';
+    l.progress = 0;
+    l.vibrateUntil = 0;
+  });
+  currentLetterIndex = 0;
+}
+
+function fireNext() {
+  if (!autoMode) return;
+  if (currentLetterIndex >= WORD.length) {
+    autoTimer = setTimeout(() => {
+      if (autoMode) {
+        LETTERS.forEach(l => { l.randomX = l.randomY = l.randomEdge = null; });
+        resetAll();
+        assignKeyboardPos();
+        fireNext();
+      }
+    }, 2000);
+    return;
+  }
+  const key = WORD[currentLetterIndex];
+  const delay = 600;
+  if (key === 'l') {
+    startLetter(currentLetterIndex, delay);
+    startLetter(currentLetterIndex + 1, delay);
+    currentLetterIndex += 2;
+  } else {
+    startLetter(currentLetterIndex, delay);
+    currentLetterIndex += 1;
+  }
+  autoTimer = setTimeout(fireNext, delay + 300);
+}
+
+function stopAuto() {
+  clearTimeout(autoTimer);
+  autoTimer = null;
+  autoMode = false;
+  LETTERS.forEach(l => { l.randomX = l.randomY = l.randomEdge = null; });
+  resetAll();
+  layout();
+}
+
+function startAuto() {
+  autoMode = true;
+  resetAll();
+  assignKeyboardPos();
+  fireNext();
+}
+
+function applySize() {
+  layout();
+  LETTERS.forEach(l => { l.randomX = l.randomY = l.randomEdge = null; });
+  if (autoMode) {
+    assignKeyboardPos();
+  } else if (currentLetterIndex > 0) {
+    assignKeyboardPos();
+  }
+}
+
+const autoToggle = document.getElementById('autoToggle');
+const sizeSlider = document.getElementById('sizeSlider');
+const sizeValue = document.getElementById('sizeValue');
+
+autoToggle.addEventListener('change', (e) => {
+  if (e.target.checked) {
+    stopAuto();
+    resetAll();
+    startAuto();
+  } else {
+    stopAuto();
+  }
+});
+
+sizeSlider.addEventListener('input', (e) => {
+  sizeMultiplier = parseFloat(e.target.value);
+  sizeValue.textContent = sizeMultiplier.toFixed(2);
+  applySize();
+});
+
+document.addEventListener('keydown', (e) => {
+  if (autoMode) return;
+  if (e.key === 'Backspace' || e.key === 'Delete') {
+    if (currentLetterIndex <= 0) return;
+    const i = currentLetterIndex - 1;
+    LETTERS[i].active = false;
+    LETTERS[i].phase = 'idle';
+    LETTERS[i].progress = 0;
+    LETTERS[i].vibrateUntil = 0;
+    currentLetterIndex = i;
+    return;
+  }
+  if (currentLetterIndex >= WORD.length) return;
+  const key = e.key.toLowerCase();
+  const expected = WORD[currentLetterIndex];
+
+  if (key === expected) {
+    if (currentLetterIndex === 0) assignKeyboardPos();
+    const now = Date.now();
+    const delta = lastKeyTime ? now - lastKeyTime : 800;
+    lastKeyTime = now;
+
+    if (key === 'l') {
+      startLetter(currentLetterIndex, delta);
+      startLetter(currentLetterIndex + 1, delta);
+      currentLetterIndex += 2;
+    } else {
+      startLetter(currentLetterIndex, delta);
+      currentLetterIndex += 1;
+    }
+  } else {
+    tremble.active = true;
+    tremble.intensity = 8;
+  }
+});
+
+let FONT_SIZE;
+
+function layout() {
+  const cols = 7;
+  const colW = W / cols;
+  FONT_SIZE = Math.min(colW * 1.5, H * 0.45) * sizeMultiplier;
+  LETTERS.forEach(l => {
+    if (l.randomX != null) return;
+    l.x = l.col * colW + colW / 2;
+    const pad = FONT_SIZE * 0.15;
+    l.y = l.edge === 'up' ? FONT_SIZE * 0.7 + pad : H - FONT_SIZE * 0.4 - pad;
+  });
+}
+
+function clamp(v, min, max) { return Math.max(min, Math.min(max, v)); }
+
+function resize() {
+  W = canvas.width = window.innerWidth;
+  H = canvas.height = window.innerHeight;
+  layout();
+}
+window.addEventListener('resize', resize);
+resize();
+
+function updateAnimations(dt) {
+  LETTERS.forEach(l => {
+    if (!l.active || l.phase === 'idle') return;
+    l.progress += dt / l.duration;
+
+    switch (l.phase) {
+      case 'windup':
+        if (l.progress >= 0.2) { l.phase = 'hit'; l.progress = 0; tremble.active = true; tremble.intensity = 10; }
+        break;
+      case 'hit':
+        if (l.progress >= 0.3) {
+          l.phase = 'settle'; l.progress = 0; l.vibrateUntil = Date.now() + 2000;
+          tremble.active = true; tremble.intensity = 6;
+        }
+        break;
+      case 'settle':
+        if (l.progress >= 0.2) { l.phase = 'idle'; l.progress = 1; }
+        break;
+    }
+  });
+}
+
+function effEdge(l) { return l.randomEdge != null ? l.randomEdge : l.edge; }
+function effX(l) { return l.randomX != null ? l.randomX : l.x; }
+function effY(l) { return l.randomY != null ? l.randomY : l.y; }
+
+function assignKeyboardPos() {
+  const pad = FONT_SIZE * 0.6;
+  const usableW = W - pad * 2;
+  const spacing = usableW / Math.max(1, LETTERS.length - 1);
+  const vRange = H * 0.35;
+  const vCenter = H * 0.4;
+
+  const rowPattern = Math.floor(Math.random() * 3);
+  LETTERS.forEach((l, i) => {
+    l.randomX = clamp(pad + i * spacing + (Math.random() - 0.5) * spacing * 0.15, pad, W - pad);
+    let yOff;
+    if (rowPattern === 0) yOff = Math.sin(i * 1.5) * vRange * 0.4;
+    else if (rowPattern === 1) yOff = (i % 2 === 0 ? -1 : 1) * vRange * 0.25;
+    else yOff = (Math.random() - 0.5) * vRange * 0.6;
+    l.randomY = clamp(vCenter + yOff + (Math.random() - 0.5) * vRange * 0.1, pad, H - pad);
+    l.randomEdge = yOff < 0 ? 'up' : 'down';
+  });
+}
+
+function getHammerState(l) {
+  const edge = effEdge(l);
+  const lx = effX(l);
+  const ly = effY(l);
+  const offset = FONT_SIZE * 1.2;
+  const baseY = edge === 'down' ? -offset : H + offset;
+  const targetY = edge === 'down' ? ly + FONT_SIZE * 0.5 : ly - FONT_SIZE * 0.5;
+
+  if (l.phase === 'idle' || !l.active) return { x: lx, y: baseY, alpha: 0 };
+
+  const p = l.progress;
+  let ty = baseY;
+  let alpha = 1;
+
+  switch (l.phase) {
+    case 'windup':
+      ty = baseY + (baseY < 0 ? -FONT_SIZE * 0.3 : FONT_SIZE * 0.3) * Math.sin(p / 0.2 * Math.PI);
+      break;
+    case 'hit':
+      const hitProgress = p / 0.3;
+      const eased = hitProgress * hitProgress;
+      const hitBase = edge === 'down' ? -FONT_SIZE * 1.2 : H + FONT_SIZE * 1.2;
+      ty = hitBase + (targetY - hitBase) * eased;
+      break;
+    case 'settle':
+      ty = targetY + (baseY - targetY) * (p / 0.2);
+      alpha = 1 - p / 0.2 * 0.5;
+      break;
+  }
+
+  return { x: lx, y: ty, alpha };
+}
+
+function bounceOut(t) {
+  if (t < 1 / 2.75) return 7.5625 * t * t;
+  if (t < 2 / 2.75) { t -= 1.5 / 2.75; return 7.5625 * t * t + 0.75; }
+  if (t < 2.5 / 2.75) { t -= 2.25 / 2.75; return 7.5625 * t * t + 0.9375; }
+  t -= 2.625 / 2.75; return 7.5625 * t * t + 0.984375;
+}
+
+function getLetterState(l) {
+  if (!l.active) return { alpha: 0, yOff: 0, sx: 1, sy: 1 };
+  const edge = effEdge(l);
+  if (l.phase === 'hit' && l.progress >= 0.25) {
+    const t = Math.min((l.progress - 0.25) / 0.05, 1);
+    const deform = 1 - t;
+    const stretchX = 1 + 0.25 * deform;
+    const squashY = 1 - 0.4 * deform;
+    return { alpha: t, yOff: 0, sx: stretchX, sy: squashY };
+  }
+  if (l.phase === 'settle') {
+    const p = Math.min(l.progress / 0.2, 1);
+    const drop = FONT_SIZE * 0.4;
+    const yOff = edge === 'up' ? drop * (1 - bounceOut(p)) : -drop * (1 - bounceOut(p));
+    const wobble = 1 + 0.1 * (1 - bounceOut(p));
+    return { alpha: 1, yOff, sx: wobble, sy: 2 - wobble };
+  }
+  if (l.phase === 'idle' && l.progress >= 1) {
+    return { alpha: 1, yOff: 0, sx: 1, sy: 1 };
+  }
+  return { alpha: 0, yOff: 0, sx: 1, sy: 1 };
+}
+
+let lastTime = 0;
+
+function loop(time) {
+  const dt = lastTime ? Math.min(time - lastTime, 50) : 16;
+  lastTime = time;
+
+  updateAnimations(dt);
+
+  ctx.save();
+
+  if (tremble.active) {
+    const tx = (Math.random() - 0.5) * tremble.intensity;
+    const ty = (Math.random() - 0.5) * tremble.intensity;
+    ctx.translate(tx, ty);
+    tremble.intensity *= tremble.decay;
+    if (tremble.intensity < 0.5) tremble.active = false;
+  }
+
+  ctx.clearRect(-10, -10, W + 20, H + 20);
+  LETTERS.forEach(l => {
+    const ex = effX(l), ey = effY(l);
+    const ls = getLetterState(l);
+    if (ls.alpha > 0) {
+      ctx.save();
+      ctx.globalAlpha = ls.alpha;
+      const pairShift = (l.col === 5 && l.index === 5) ? -8
+                     : (l.col === 5 && l.index === 6) ? 8
+                     : 0;
+      const vibrating = l.vibrateUntil > Date.now();
+      const vx = vibrating ? (Math.random() - 0.5) * 4 : 0;
+      const vy = vibrating ? (Math.random() - 0.5) * 4 : 0;
+      ctx.translate(ex + pairShift + vx, ey + ls.yOff + vy);
+      ctx.scale(ls.sx, ls.sy);
+      ctx.fillStyle = '#fff';
+      ctx.font = FONT_SIZE + 'px "Chokokutai", sans-serif';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(l.char.toUpperCase(), 0, 0);
+      ctx.restore();
+    }
+
+    const hammerState = getHammerState(l);
+    if (hammerState.alpha > 0) {
+      ctx.save();
+      ctx.globalAlpha = hammerState.alpha;
+      const hx = hammerState.x;
+      const hy = hammerState.y;
+      const s = FONT_SIZE / 48;
+      const handleLen = 60 * s;
+      const handleW = 8 * s;
+      const headW = 30 * s;
+      const headH = 16 * s;
+
+      // handle shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.3)';
+      ctx.fillRect(hx - handleW / 2 + 3 * s, hy + 3 * s, handleW, handleLen);
+
+      // handle gradient (3D wood)
+      const handleGrad = ctx.createLinearGradient(hx - handleW / 2, hy, hx + handleW / 2, hy);
+      handleGrad.addColorStop(0, '#5C3317');
+      handleGrad.addColorStop(0.3, '#A0522D');
+      handleGrad.addColorStop(0.5, '#D2A679');
+      handleGrad.addColorStop(0.7, '#A0522D');
+      handleGrad.addColorStop(1, '#5C3317');
+      ctx.fillStyle = handleGrad;
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(hx - handleW / 2, hy, handleW, handleLen, 3) : ctx.rect(hx - handleW / 2, hy, handleW, handleLen);
+      ctx.fill();
+
+      // head shadow
+      ctx.fillStyle = 'rgba(0,0,0,0.4)';
+      ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(hx - headW / 2 + 3 * s, hy - headH + 3 * s, headW, headH, 4) : ctx.rect(hx - headW / 2 + 3 * s, hy - headH + 3 * s, headW, headH);
+      ctx.fill();
+
+      // head gradient (3D metal)
+      const headGrad = ctx.createLinearGradient(hx - headW / 2, hy - headH, hx + headW / 2, hy);
+      headGrad.addColorStop(0, '#555');
+      headGrad.addColorStop(0.2, '#999');
+      headGrad.addColorStop(0.4, '#ddd');
+      headGrad.addColorStop(0.6, '#999');
+      headGrad.addColorStop(0.8, '#bbb');
+      headGrad.addColorStop(1, '#666');
+      ctx.fillStyle = headGrad;
+      ctx.beginPath();
+      const hhx = hx - headW / 2;
+      const hhy = hy - headH;
+      if (ctx.roundRect) {
+        ctx.roundRect(hhx, hhy, headW, headH, 4);
+      } else {
+        ctx.rect(hhx, hhy, headW, headH);
+      }
+      ctx.fill();
+
+      // head top highlight
+      ctx.fillStyle = 'rgba(255,255,255,0.2)';
+      ctx.beginPath();
+      if (ctx.roundRect) {
+        ctx.roundRect(hhx + 4 * s, hhy + 2 * s, headW - 8 * s, headH * 0.3, 2);
+      } else {
+        ctx.rect(hhx + 4 * s, hhy + 2 * s, headW - 8 * s, headH * 0.3);
+      }
+      ctx.fill();
+
+      if (l.phase === 'hit' && l.progress > 0.1 && l.progress < 0.3) {
+        const impactY = hy + handleLen;
+        for (let i = 0; i < 5; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const len = (10 + Math.random() * 15) * s;
+          const spread = 15 * s + Math.random() * 10 * s;
+          ctx.strokeStyle = 'rgba(255,255,200,' + (0.5 + Math.random() * 0.5) + ')';
+          ctx.lineWidth = (1.5 + Math.random() * 2) * s;
+          ctx.beginPath();
+          ctx.moveTo(hx + Math.cos(angle) * spread, impactY + Math.sin(angle) * spread);
+          ctx.lineTo(hx + Math.cos(angle) * (spread + len), impactY + Math.sin(angle) * (spread + len));
+          ctx.stroke();
+        }
+      }
+
+      ctx.restore();
+    }
+  });
+
+  // halftone screen overlay
+  const step = 10;
+  for (let y = 0; y < H; y += step) {
+    for (let x = 0; x < W; x += step) {
+      const d = Math.sin(x * 0.05) * Math.cos(y * 0.05) * 0.5 + 0.5;
+      const r = 2 + d * 3;
+      ctx.fillStyle = 'rgba(255,255,255,' + (0.02 + d * 0.04) + ')';
+      ctx.beginPath();
+      ctx.arc(x + step / 2, y + step / 2, r, 0, Math.PI * 2);
+      ctx.fill();
+    }
+  }
+
+  ctx.fillStyle = 'rgba(255,255,255,0.3)';
+  ctx.font = '16px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'bottom';
+  ctx.fillText('Type "martello" on your keyboard', W / 2, H - 10);
+
+  ctx.restore();
+  requestAnimationFrame(loop);
+}
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    // pause
+  } else {
+    lastTime = 0;
+  }
+});
+
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

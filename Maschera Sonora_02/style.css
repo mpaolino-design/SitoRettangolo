@@ -1,0 +1,108 @@
+.back-link { position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:99999; font-family:'Anton',sans-serif; font-size:14px; color:#F2071B; text-decoration:none; padding:6px 16px; border:2px solid #F2071B; border-radius:999px; background:transparent; transition:background 0.2s,color 0.2s; }
+.back-link:hover { background:#F2071B; color:#fff; }
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #1a1a2e;
+  color: #eee;
+  font-family: system-ui, sans-serif;
+}
+
+#container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+#bg-stars {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+#bg-stars svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.star {
+  fill: #f6ff07;
+  will-change: transform, opacity;
+}
+
+#mask-container {
+  position: relative;
+  width: 90vmin;
+  height: auto;
+  max-height: 80vh;
+  aspect-ratio: 1179 / 2556;
+  z-index: 1;
+}
+
+#mask-container svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+#controls {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  width: 90vmin;
+  max-width: 400px;
+}
+
+#controls label {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+#controls input[type="range"] { flex: 1; margin-left: 1rem; }
+
+#mic-button {
+  padding: 0.75rem 1.5rem;
+  font-size: 1rem;
+  border: none;
+  border-radius: 8px;
+  background: #e94560;
+  color: #fff;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+#mic-button:hover { background: #ff6b81; }
+#mic-button:disabled { background: #555; cursor: not-allowed; }
+
+#mic-button.active { background: #0f3460; }
+#mic-button.active:hover { background: #16213e; }
+
+#volume-meter {
+  width: 100%;
+  height: 8px;
+  background: #333;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+#volume-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #0f3460, #e94560);
+  transition: width 0.05s;
+}

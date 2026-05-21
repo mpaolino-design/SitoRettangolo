@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Marionetta</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; font-family: monospace; }
+  #drawCanvas { display: block; width: 100vw; height: 100vh; }
+  #video { position: fixed; top: 12px; right: 12px; width: 160px; height: 120px;
+           border-radius: 8px; transform: scaleX(-1); z-index: 10;
+           border: 1px solid rgba(255,255,255,0.2); }
+  #info { position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+           color: #fff; font-size: 13px; text-align: center;
+           background: rgba(0,0,0,0.7); padding: 6px 14px; border-radius: 8px;
+           z-index: 10; }
+   .back-link { position: fixed; top: 16px; left: 50%; transform: translateX(-50%); z-index: 99999; font-family: 'Anton', sans-serif; font-size: 14px; color: #F2071B; text-decoration: none; padding: 6px 16px; border: 2px solid #F2071B; border-radius: 999px; background: transparent; transition: background 0.2s, color 0.2s; }
+  .back-link:hover { background: #F2071B; color: #fff; }
+  #status { position: fixed; top: 12px; left: 12px; color: #fff; font-size: 13px;
+             background: rgba(0,0,0,0.6); padding: 4px 10px; border-radius: 6px;
+             z-index: 10; display: flex; align-items: center; gap: 8px; }
+    #colorDot { width: 16px; height: 16px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.3); display: inline-block; }
+    #help { position: fixed; bottom: 52px; left: 50%; transform: translateX(-50%);
+             color: #ccc; font-size: 11px; text-align: center;
+             background: rgba(0,0,0,0.7); padding: 6px 14px; border-radius: 8px;
+             z-index: 10; display: flex; flex-direction: column; gap: 3px;
+             white-space: nowrap; line-height: 1.5; }
+    #help .row { display: flex; gap: 16px; justify-content: center; }
+    #help span { display: inline-flex; align-items: center; gap: 4px; }
+    #help .key { display: inline-block; background: rgba(255,255,255,0.1);
+                 padding: 0 5px; border-radius: 4px; font-weight: bold; color: #fff; }
+     #help .sep { color: #555; }
+    #exportBtn { position: fixed; bottom: 16px; right: 16px; z-index: 10;
+                 background: rgba(255,255,255,0.12); color: #fff;
+                 border: 1px solid rgba(255,255,255,0.2);
+                 padding: 4px 12px; border-radius: 6px; cursor: pointer;
+                 font: 13px monospace; }
+    #exportBtn:hover { background: rgba(255,255,255,0.25); }
+</style>
+</head>
+<body>
+<a class="back-link" href="../index.html">← Homepage</a>
+<video id="video" autoplay playsinline></video>
+<canvas id="drawCanvas"></canvas>
+<div id="info">Loading model...</div>
+<div id="status"><span id="colorDot" style="background:#fff"></span> <span id="modeText">Draw</span></div>
+<button id="exportBtn">⬇ Esporta</button>
+
+<div id="help">
+  <div class="row">
+    <span><span class="key">☝️</span> Indice → Disegna</span>
+    <span class="sep">|</span>
+    <span><span class="key">✊</span> Pugno → Gomma</span>
+    <span class="sep">|</span>
+    <span><span class="key">✋</span> Mano aperta → Stop</span>
+  </div>
+  <div class="row">
+    <span><span class="key">🤏</span> Pollice+Indice → Colore</span>
+    <span class="sep">|</span>
+    <span><span class="key">🔊</span> Rumore forte → Pulisci tutto</span>
+  </div>
+</div>
+
+<script>
+// Silenzia il logging GLOG di MediaPipe WASM
+const _origLog = console.log;
+const _origWarn = console.warn;
+const _origInfo = console.info;
+const glogFilter = /^[IWE]\d{4}\s+\d+:\d+:\d+/;
+console.log = function(...a) { if (a[0] && typeof a[0] === 'string' && glogFilter.test(a[0])) return; return _origLog.apply(console, a); };
+console.warn = function(...a) { if (a[0] && typeof a[0] === 'string' && glogFilter.test(a[0])) return; return _origWarn.apply(console, a); };
+console.info = function(...a) { if (a[0] && typeof a[0] === 'string' && glogFilter.test(a[0])) return; return _origInfo.apply(console, a); };
+</script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection"></script>
+<script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands"></script>
+
+<script>
+const video = document.getElementById('video');
+const canvas = document.getElementById('drawCanvas');
+const ctx = canvas.getContext('2d');
+const info = document.getElementById('info');
+const colorDot = document.getElementById('colorDot');
+const modeText = document.getElementById('modeText');
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+const exportBtn = document.getElementById('exportBtn');
+if (exportBtn) {
+  exportBtn.addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = 'marionetta-' + Date.now() + '.png';
+    link.href = buffer.toDataURL();
+    link.click();
+  });
+}
+const TIP = { thumb: 4, index: 8, middle: 12, ring: 16, pinky: 20 };
+const MCP = { index: 5, middle: 9, ring: 13, pinky: 17 };
+
+const ACTIVATE_THRESHOLD = 0.035;
+
+const MIN_MOVE_DIST = 8;
+
+const buffer = document.createElement('canvas');
+const bufCtx = buffer.getContext('2d');
+let committedSegments = [];
+let skeletonHands = {};
+
+const handStates = {};
+
+function getState(id) {
+  if (!handStates[id]) {
+    handStates[id] = { segment: [], active: false, lastPos: null, mode: MODE.IDLE };
+  }
+  return handStates[id];
+}
+
+const HAND_CONNECTIONS = [
+  [0,1],[1,2],[2,3],[3,4],
+  [0,5],[5,6],[6,7],[7,8],
+  [0,9],[9,10],[10,11],[11,12],
+  [0,13],[13,14],[14,15],[15,16],
+  [0,17],[17,18],[18,19],[19,20],
+  [5,9],[9,13],[13,17]
+];
+
+function resizeBuffer() {
+  buffer.width = window.innerWidth;
+  buffer.height = window.innerHeight;
+  for (const seg of committedSegments) {
+    drawSegmentOnBuffer(seg);
+  }
+}
+window.addEventListener('resize', resizeBuffer);
+resizeBuffer();
+
+
+
+function dist2D(a, b) {
+  return Math.sqrt((a.x - b.x) ** 2 + (a.y - b.y) ** 2);
+}
+
+function startSegment(state) {
+  state.segment = [];
+  state.active = true;
+  state.lastPos = null;
+}
+
+function finalizeSegment(state) {
+  if (!state.active) return;
+  state.active = false;
+  if (state.segment.length < 2) { state.segment = []; return; }
+  committedSegments.push([...state.segment]);
+  drawSegmentOnBuffer(state.segment);
+  state.segment = [];
+}
+
+function drawSegmentOnBuffer(segment) {
+  if (segment.length < 2) return;
+  for (let i = 1; i < segment.length; i++) {
+    const p0 = segment[i - 1];
+    const p1 = segment[i];
+    bufCtx.beginPath();
+    bufCtx.moveTo(p0.x, p0.y);
+    bufCtx.lineTo(p1.x, p1.y);
+    bufCtx.strokeStyle = p0.color;
+    bufCtx.lineWidth = p1.width;
+    bufCtx.lineCap = 'round';
+    bufCtx.lineJoin = 'round';
+    bufCtx.stroke();
+  }
+}
+
+function scale2D(x, y) {
+  const vw = video.videoWidth || 640;
+  const vh = video.videoHeight || 480;
+  return { x: canvas.width - x * (canvas.width / vw), y: y * (canvas.height / vh) };
+}
+
+function drawSkeleton(kp) {
+  if (!kp || kp.length < 21) return;
+  ctx.save();
+  for (const [i, j] of HAND_CONNECTIONS) {
+    if (kp[i] && kp[j]) {
+      const p0 = scale2D(kp[i].x, kp[i].y);
+      const p1 = scale2D(kp[j].x, kp[j].y);
+      ctx.beginPath();
+      ctx.moveTo(p0.x, p0.y);
+      ctx.lineTo(p1.x, p1.y);
+      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+    }
+  }
+  for (const pt of kp) {
+    if (!pt) continue;
+    const p = scale2D(pt.x, pt.y);
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
+function render() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.drawImage(buffer, 0, 0);
+  for (const kp of Object.values(skeletonHands)) {
+    drawSkeleton(kp);
+  }
+  for (const state of Object.values(handStates)) {
+    if (state.active && state.segment.length >= 2) {
+      drawSegmentOnCanvas(ctx, state.segment);
+    }
+  }
+}
+
+function drawSegmentOnCanvas(context, segment) {
+  for (let i = 1; i < segment.length; i++) {
+    const p0 = segment[i - 1];
+    const p1 = segment[i];
+    context.beginPath();
+    context.moveTo(p0.x, p0.y);
+    context.lineTo(p1.x, p1.y);
+    context.strokeStyle = p1.color;
+    context.lineWidth = p1.width;
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.stroke();
+  }
+}
+
+function dist3D(a, b) {
+  const dz = (a.z !== undefined && b.z !== undefined) ? (a.z - b.z)**2 : 0;
+  return Math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2 + dz);
+}
+
+function startWebcam() {
+  return navigator.mediaDevices.getUserMedia({
+    video: { width: 640, height: 480, facingMode: 'user' },
+    audio: true
+  }).then(stream => {
+    video.srcObject = stream;
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    const source = audioCtx.createMediaStreamSource(stream);
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    window._audioAnalyser = analyser;
+    return video.play();
+  });
+}
+
+async function loadDetector(retries = 1) {
+  const model = handPoseDetection.SupportedModels.MediaPipeHands;
+  for (let i = 0; i <= retries; i++) {
+    try {
+      return await handPoseDetection.createDetector(model, {
+        runtime: 'mediapipe',
+        modelType: 'lite',
+        maxHands: 2,
+        solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/hands'
+      });
+    } catch (e) {
+      console.error('Detector load error:', e);
+      if (i < retries) {
+        info.textContent = 'Retrying model load...';
+        await new Promise(r => setTimeout(r, 2000));
+      } else throw e;
+    }
+  }
+}
+
+async function main() {
+  await startWebcam();
+  info.textContent = 'Loading model...';
+  console.log('Loading model...');
+  const detector = await loadDetector();
+  console.log('Model loaded, starting detect loop');
+  info.textContent = 'Ready';
+  detectLoop(detector);
+}
+
+const MODE = { IDLE: 'idle', DRAW: 'draw', ERASER: 'eraser' };
+let canChangeColor = true;
+
+const COLORS = ['#ffffff', '#ff0000', '#0066ff', '#00cc44', '#ff8800'];
+let colorIndex = 0;
+let currentColor = COLORS[0];
+
+const LOUD_THRESHOLD = 0.4;
+const CLEAR_COOLDOWN_FRAMES = 90;
+let clearCooldown = 0;
+let clearFlash = 0;
+
+function clearAll() {
+  committedSegments = [];
+  bufCtx.clearRect(0, 0, buffer.width, buffer.height);
+  for (const s of Object.values(handStates)) {
+    if (s.active) finalizeSegment(s);
+  }
+  clearFlash = 60;
+}
+
+function processHands(hands) {
+  const seenIds = new Set();
+  let anyColorPinch = false;
+  skeletonHands = {};
+  let anyOpen = false;
+
+  for (const hand of hands) {
+    const id = hand.handedness;
+    seenIds.add(id);
+    const state = getState(id);
+    const kp = hand.keypoints;
+    let kp3d = hand.keypoints3D;
+
+    if (!kp || !Array.isArray(kp) || kp.length < 21) continue;
+
+    skeletonHands[id] = kp;
+    if (!kp3d || !Array.isArray(kp3d) || kp3d.length < 5) kp3d = kp;
+
+    const thumbTip = kp3d[TIP.thumb];
+    const indexTip = kp3d[TIP.index];
+
+    const fingers = ['index', 'middle', 'ring', 'pinky'];
+    const isFist = fingers.every(f => kp[TIP[f]] && kp[MCP[f]] && kp[TIP[f]].y > kp[MCP[f]].y);
+    const isOpen = fingers.every(f => kp[TIP[f]] && kp[MCP[f]] && kp[TIP[f]].y < kp[MCP[f]].y);
+
+    // --- OPEN HAND → stop ---
+    if (isOpen) {
+      anyOpen = true;
+      if (state.active) finalizeSegment(state);
+      state.mode = MODE.IDLE;
+      continue;
+    }
+
+    // --- FIST → eraser ---
+    if (isFist) {
+      if (state.active) finalizeSegment(state);
+      state.mode = MODE.ERASER;
+      bufCtx.save();
+      bufCtx.globalCompositeOperation = 'destination-out';
+      for (const pt of kp) {
+        if (!pt) continue;
+        const p = scale2D(pt.x, pt.y);
+        const r = 15 * (canvas.width / (video.videoWidth || 640));
+        bufCtx.beginPath(); bufCtx.arc(p.x, p.y, r, 0, Math.PI * 2); bufCtx.fill();
+      }
+      bufCtx.restore();
+      continue;
+    }
+
+    // --- DRAW at index tip ---
+    if (!state.active) startSegment(state);
+    state.mode = MODE.DRAW;
+    const idx = kp[TIP.index];
+    if (idx) {
+      const p = scale2D(idx.x, idx.y);
+      if (!state.lastPos || dist2D(p, state.lastPos) >= MIN_MOVE_DIST) {
+        state.segment.push({ x: p.x, y: p.y, width: 6, color: currentColor });
+        state.lastPos = p;
+      }
+    }
+
+    // --- COLOR (thumb+index) ---
+    const dTI = dist3D(thumbTip, indexTip);
+    if (dTI < ACTIVATE_THRESHOLD) anyColorPinch = true;
+  }
+
+  if (anyOpen) {
+    for (const s of Object.values(handStates)) if (s.active) finalizeSegment(s);
+  }
+
+  // --- GLOBAL COLOR CHANGE ---
+  if (anyColorPinch && canChangeColor) {
+    for (const s of Object.values(handStates)) {
+      if (s.active) finalizeSegment(s);
+    }
+    colorIndex = (colorIndex + 1) % COLORS.length;
+    currentColor = COLORS[colorIndex];
+    colorDot.style.background = currentColor;
+    canChangeColor = false;
+  }
+  if (!anyColorPinch) canChangeColor = true;
+
+  // --- Finalize segments for lost hands ---
+  for (const id of Object.keys(handStates)) {
+    if (!seenIds.has(id) && handStates[id].active) {
+      finalizeSegment(handStates[id]);
+      handStates[id].mode = MODE.IDLE;
+    }
+  }
+
+  // --- UI ---
+  const modes = Object.values(handStates).map(s => s.mode);
+  if (modes.includes(MODE.ERASER)) modeText.textContent = 'Eraser';
+  else if (modes.includes(MODE.DRAW)) modeText.textContent = 'Draw';
+  else modeText.textContent = 'Idle';
+}
+
+let frameCount = 0;
+let detecting = false;
+
+async function detectLoop(detector) {
+  if (!detector) return;
+  frameCount++;
+  if (!detecting) {
+    detecting = true;
+    try {
+      const hands = await detector.estimateHands(video);
+      processHands(hands);
+      if (!clearFlash) info.textContent = `Hands: ${hands.length}`;
+    } catch (e) {
+      console.error('detect error:', e);
+    }
+    detecting = false;
+  }
+  // --- LOUD NOISE → CLEAR ALL ---
+  if (clearCooldown > 0) clearCooldown--;
+  if (clearFlash > 0) clearFlash--;
+  const analyser = window._audioAnalyser;
+  if (analyser && clearCooldown === 0) {
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    analyser.getByteTimeDomainData(data);
+    let sum = 0;
+    for (let i = 0; i < data.length; i++) {
+      const v = (data[i] - 128) / 128;
+      sum += v * v;
+    }
+    const rms = Math.sqrt(sum / data.length);
+    if (rms > LOUD_THRESHOLD) {
+      clearAll();
+      clearCooldown = CLEAR_COOLDOWN_FRAMES;
+    }
+  }
+  if (clearFlash > 0) info.textContent = 'Pulisci!';
+  render();
+  requestAnimationFrame(() => detectLoop(detector));
+}
+
+main().catch(e => {
+  console.error(e);
+  info.textContent = 'Error: ' + e.message;
+});
+</script>
+</body>
+</html>

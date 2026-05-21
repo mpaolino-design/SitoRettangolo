@@ -1,0 +1,23 @@
+#F2071B rosso 
+#3F83BF blu
+#F24405 arancione
+#68A66D verde
+
+titoli: 
+H1:Anton
+H2: Anton 
+H3: Anton
+
+Body:Inter
+Caption  : Inter
+
+Colori:
+
+Primary: #F2071B
+Secondary: #3a86ff
+background: #F2E0BD 
+
+Ci devono essere 3 stati:
+-Active #F2071B
+-Disabled #00000080
+-Hover #F2071BB3

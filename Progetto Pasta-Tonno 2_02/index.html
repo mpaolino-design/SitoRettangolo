@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PASTA AL TONNO — Cucina Punk</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bytesized&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    .back-link { position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:99999; font-family:'Anton',sans-serif; font-size:14px; color:#F2071B; text-decoration:none; padding:6px 16px; border:2px solid #F2071B; border-radius:999px; background:transparent; transition:background 0.2s,color 0.2s; }
+    .back-link:hover { background:#F2071B; color:#fff; }
+  </style>
+</head>
+<body>
+  <a class="back-link" href="../index.html">← Homepage</a>
+  <svg class="noise-filter" aria-hidden="true">
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </svg>
+
+  <nav class="nav">
+    <div class="nav__inner">
+      <a href="#hero" class="nav__logo">PASTA</a>
+      <button class="nav__toggle" aria-label="Menu">☰</button>
+      <ul class="nav__links">
+        <li><a href="#hero">Home</a></li>
+        <li><a href="#ricette">Ricette</a></li>
+        <li><a href="#ricetta">La Ricetta</a></li>
+        <li><a href="#chef">Chef</a></li>
+        <li><a href="#contatti">Contatti</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <main>
+    <section id="hero" class="section hero">
+      <div class="hero__content">
+        <h1 class="hero__title">PASTA AL TONNO</h1>
+        <p class="hero__subtitle">Cucina punk. Stellata.</p>
+        <a href="#ricetta" class="hero__cta">Vedi la ricetta</a>
+      </div>
+    </section>
+
+    <section id="ricette" class="section ricette">
+      <div class="section__header">
+        <h2 class="section__title">RICETTE</h2>
+      </div>
+      <div class="ricette__grid">
+        <article class="ricetta-card">
+          <div class="ricetta-card__image"><img src="immagine/pasta-tonno-pomodoro.jpg" alt="Pasta al Tonno con Pomodoro"></div>
+          <div class="ricetta-card__body">
+            <h3 class="ricetta-card__title">Pasta al Tonno con Pomodoro</h3>
+            <p class="ricetta-card__desc">La ricetta punk che unisce semplicità e sapore. Rigatoni, tonno e pomodoro come non li hai mai visti.</p>
+            <a href="#ricetta" class="ricetta-card__link">Leggi →</a>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section id="ricetta" class="section ricetta">
+      <div class="ricetta__inner">
+        <div class="ricetta__header">
+          <h2 class="ricetta__title">Pasta al Tonno con Pomodoro</h2>
+          <div class="ricetta__meta">
+            <span class="ricetta__chef">CHEF MARION PAOLON</span>
+            <span class="ricetta__time">Preparazione: 25 min</span>
+          </div>
+        </div>
+        <div class="ricetta__grid">
+          <div class="ricetta__ingredients">
+            <h3 class="ricetta__subtitle">Ingredienti</h3>
+            <ul class="ricetta__list">
+              <li>150 g di pasta (rigatoni)</li>
+              <li>Salsa di pomodoro (ciliegino)</li>
+              <li>Tonno</li>
+              <li>Origano</li>
+              <li>Sale</li>
+            </ul>
+          </div>
+          <div class="ricetta__steps">
+            <h3 class="ricetta__subtitle">Preparazione</h3>
+            <ol class="ricetta__steps-list">
+              <li><span class="ricetta__step-num">1</span><span>Prendi la pentola dalla dispensa. Mettila sotto l'acqua del lavandino a metà, poi mettila sul piano cottura.</span></li>
+              <li><span class="ricetta__step-num">2</span><span>Accendi il fuoco e il gas. Aspetta 10 minuti che l'acqua bolle.</span></li>
+              <li><span class="ricetta__step-num">3</span><span>Metti i 150 g di pasta e 2 cucchiai di sale. Gira con il mestolo.</span></li>
+              <li><span class="ricetta__step-num">4</span><span>Dopo 10 minuti assaggia. Se cotta, spegni e scolala.</span></li>
+              <li><span class="ricetta__step-num">5</span><span>Rimetti la pentola sul fuoco con salsa, tonno e origano. Mescola per 2 minuti.</span></li>
+              <li><span class="ricetta__step-num">6</span><span>Aggiungi la pasta, mescola e cuoci altri 2 minuti. Spegni il fuoco.</span></li>
+              <li><span class="ricetta__step-num">7</span><span>Impiatta e... buon appetito! (Prendi la forchetta, se no mangi con le mani.)</span></li>
+            </ol>
+          </div>
+        </div>
+        <div class="ricetta__footer">
+          <span class="ricetta__signature">CHEF MARION PAOLON</span>
+        </div>
+      </div>
+    </section>
+
+    <section id="chef" class="section chef">
+      <div class="chef__inner">
+        <div class="chef__image"><img src="immagine/cheftony-smalljpg.jpeg" alt="CHEF MARION PAOLON"></div>
+        <div class="chef__body">
+          <h2 class="chef__name">CHEF MARION PAOLON</h2>
+          <p class="chef__bio">Appassionato di cucina semplice e senza compromessi. Ogni piatto è un manifesto: pochi ingredienti, personalità, e un pizzico di sana incoscienza. Benvenuti nella mia cucina.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer id="contatti" class="footer">
+    <div class="footer__inner">
+      <div class="footer__links">
+        <a href="#" class="footer__link">Instagram</a>
+        <a href="#" class="footer__link">Email</a>
+      </div>
+      <p class="footer__copy">© 2026 CHEF MARION PAOLON — Cucina Punk</p>
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

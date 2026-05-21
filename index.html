@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mario Paolino — Portfolio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <svg class="noise-filter" aria-hidden="true">
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </svg>
+
+  <section id="hero">
+    <div id="floating-names" aria-hidden="true"></div>
+    <h1 id="main-title">MARIO PAOLINO</h1>
+    <a href="#projects" class="btn-scroll">Scopri i progetti ↓</a>
+  </section>
+
+  <section id="projects">
+    <div class="container" id="spheres-grid"></div>
+  </section>
+
+  <a href="#hero" class="btn-top">↑</a>
+
+  <footer>
+    <div class="container">
+    </div>
+  </footer>
+
+  <script src="js/script.js"></script>
+</body>
+</html>

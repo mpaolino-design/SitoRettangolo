@@ -1,0 +1,243 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: #111111;
+  color: #f5f0eb;
+  overflow-x: hidden;
+}
+
+/* Noise filter */
+.noise-filter {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.06;
+  mix-blend-mode: overlay;
+}
+
+/* Halftone dots */
+body::after {
+  content: '';
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 9998;
+  background-image: radial-gradient(circle, #888 1px, transparent 1px);
+  background-size: 8px 8px;
+  opacity: 0.15;
+}
+
+/* Hero */
+#hero {
+  position: relative;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+#floating-names {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.floating-name {
+  position: absolute;
+  font-family: 'Anton', sans-serif;
+  font-size: 3.5rem;
+  color: #3F83BF;
+  white-space: nowrap;
+  user-select: none;
+  will-change: transform;
+  cursor: grab;
+}
+
+.floating-name:active {
+  cursor: grabbing;
+}
+
+.floating-name.trail {
+  pointer-events: none;
+}
+
+.floating-name.colliding {
+  opacity: 0.3;
+}
+
+#main-title {
+  position: relative;
+  z-index: 1;
+  font-family: 'Anton', sans-serif;
+  font-size: clamp(4rem, 14vw, 12rem);
+  color: #F2071B;
+  text-align: center;
+  line-height: 1;
+}
+
+.btn-scroll {
+  position: absolute;
+  bottom: 3rem;
+  z-index: 1;
+  font-family: 'Inter', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #F2071B;
+  text-decoration: none;
+  padding: 0.75rem 2rem;
+  border: 2px solid #F2071B;
+  border-radius: 999px;
+  transition: background 0.2s, color 0.2s;
+}
+
+.btn-scroll:hover {
+  background: #F2071B;
+  color: #F2E0BD;
+}
+
+/* Projects */
+#projects {
+  position: relative;
+  min-height: 80vh;
+  overflow: hidden;
+}
+
+#spheres-grid {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+}
+
+.card {
+  width: 200px;
+  height: 200px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  cursor: pointer;
+  background: var(--card-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+  font-family: 'Anton', sans-serif;
+  font-size: 1.1rem;
+  color: #fff;
+  padding: 1.5rem;
+  transition: transform 0.2s, box-shadow 0.2s;
+  position: absolute;
+}
+
+.card::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 340px;
+  height: 340px;
+  border-radius: 50%;
+  background: var(--card-color);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.2);
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.35s ease-out;
+  z-index: 0;
+}
+
+.card:hover::before {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 0.5;
+}
+
+.card::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 360px;
+  height: 360px;
+  border-radius: 50%;
+  border: 2px solid var(--card-color);
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.2);
+  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.08s, opacity 0.3s ease-out 0.08s;
+  z-index: 0;
+}
+
+.card:hover::after {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 0.5;
+}
+
+
+
+.card:hover {
+  transform: scale(1.08);
+  box-shadow: 0 0 30px rgba(255,255,255,0.2), 0 8px 24px rgba(0,0,0,0.5);
+}
+
+
+
+/* Footer */
+footer {
+  padding: 2rem 1rem;
+  text-align: center;
+  background: #1a1a1a;
+}
+
+footer a {
+  font-family: 'Inter', sans-serif;
+  color: #F2E0BD;
+  text-decoration: none;
+  margin: 0 1rem;
+  font-size: 0.95rem;
+}
+
+footer a:hover {
+  color: #F2071B;
+}
+
+/* Back to top */
+.btn-top {
+  position: fixed;
+  bottom: 2rem;
+  right: 2rem;
+  z-index: 100;
+  font-family: 'Anton', sans-serif;
+  font-size: 0.9rem;
+  color: #F2071B;
+  text-decoration: none;
+  padding: 0.6rem 1.2rem;
+  border: 2px solid #F2071B;
+  border-radius: 999px;
+  background: transparent;
+  transition: background 0.2s, color 0.2s, transform 0.2s;
+}
+
+.btn-top:hover {
+  background: #F2071B;
+  color: #fff;
+  transform: scale(1.05);
+}
+
+/* Container */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+}

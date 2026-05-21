@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vector Pattern Tool</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    .back-link { position:fixed; top:16px; left:50%; transform:translateX(-50%); z-index:99999; font-family:'Anton',sans-serif; font-size:14px; color:#F2071B; text-decoration:none; padding:6px 16px; border:2px solid #F2071B; border-radius:999px; background:transparent; transition:background 0.2s,color 0.2s; }
+    .back-link:hover { background:#F2071B; color:#fff; }
+  </style>
+</head>
+<body>
+  <a class="back-link" href="../index.html">← Homepage</a>
+  <div id="app">
+    <aside id="controls">
+      <h1>Pattern Tool</h1>
+
+      <label>
+        <input type="checkbox" id="grid-mode">
+        Modalità griglia
+      </label>
+
+      <div id="grid-controls">
+        <label>Righe <span id="rows-val">10</span></label>
+        <input type="range" id="rows" min="1" max="100" value="10">
+
+        <label>Colonne <span id="cols-val">10</span></label>
+        <input type="range" id="cols" min="1" max="100" value="10">
+      </div>
+
+      <hr>
+
+      <label>Larghezza <span id="w-val">90</span></label>
+      <input type="range" id="w-scale" min="10" max="100" value="90">
+
+      <label>Altezza <span id="h-val">50</span></label>
+      <input type="range" id="h-scale" min="10" max="100" value="50">
+
+      <label>Rotazione (°) <span id="rot-val">0</span></label>
+      <input type="range" id="rotation" min="0" max="360" value="0">
+
+      <label>
+        <input type="checkbox" id="random-rot">
+        Rotazione casuale
+      </label>
+
+      <label>Spaziatura (px) <span id="gap-val">0</span></label>
+      <input type="range" id="gap" min="0" max="40" step="1" value="0">
+
+      <label>
+        <input type="checkbox" id="continuous">
+        Effetto continuo
+      </label>
+
+      <label>Prob. rett. interno (%) <span id="inner-prob-val">30</span></label>
+      <input type="range" id="inner-prob" min="0" max="100" value="30">
+
+      <label>
+        <input type="checkbox" id="inner-fill" checked>
+        Inner Fill
+      </label>
+
+      <button id="clear-flow">Pulisci</button>
+      <button id="download">Scarica SVG</button>
+    </aside>
+    <main id="canvas-container">
+      <svg id="canvas" xmlns="http://www.w3.org/2000/svg"></svg>
+    </main>
+  </div>
+  <script src="script.js"></script>
+</body>
+</html>
