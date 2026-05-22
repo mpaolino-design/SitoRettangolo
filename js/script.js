@@ -108,11 +108,8 @@ letters.forEach((span) => {
     const idx = (parseInt(span.dataset.colorIndex) + 1) % hoverColors.length;
     span.dataset.colorIndex = idx;
     span.style.color = hoverColors[idx];
+    span.classList.toggle('deformed');
   });
-});
-
-title.addEventListener('mouseenter', () => {
-  letters.forEach((s) => s.classList.toggle('deformed'));
 });
 
 title.addEventListener('mouseleave', () => {
