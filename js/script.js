@@ -94,9 +94,10 @@ let lastMouseTime = 0;
 
 const titleText = title.textContent;
 title.textContent = '';
-const letters = titleText.split('').map((ch) => {
+const letters = titleText.split('').map((ch, i) => {
   const span = document.createElement('span');
   span.textContent = ch === ' ' ? '\u00A0' : ch;
+  span.style.setProperty('--i', i);
   span.style.transition = 'color 0.15s';
   span.dataset.colorIndex = '0';
   title.appendChild(span);

@@ -56,9 +56,9 @@ body::before {
   background: repeating-linear-gradient(
     to bottom,
     transparent 0px,
-    transparent 2px,
-    rgba(0,0,0,0.12) 2px,
-    rgba(0,0,0,0.12) 3px
+    transparent 1px,
+    rgba(0,0,0,0.04) 1px,
+    rgba(0,0,0,0.04) 2px
   );
 }
 
@@ -153,6 +153,18 @@ body::before {
   color: #F2071B;
   text-align: center;
   line-height: 1;
+}
+
+#main-title span {
+  display: inline-block;
+  transition: transform 0.15s ease, color 0.15s ease;
+  transition-delay: calc(var(--i) * 12ms);
+  cursor: default;
+}
+
+#main-title span:hover {
+  transform: translateY(-4px) scale(1.08) rotate(-2deg);
+  transition-delay: 0ms;
 }
 
 .btn-scroll {
