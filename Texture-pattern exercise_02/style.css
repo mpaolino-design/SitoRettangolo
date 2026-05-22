@@ -85,7 +85,7 @@ html, body {
 #canvas {
   width: 100%;
   height: 100%;
-  background: radial-gradient(ellipse at center, #d41206 0%, #9B0F06 40%, #5A0800 100%);
+  background: #fff;
   box-shadow: 0 2px 8px rgba(0,0,0,0.1);
   cursor: crosshair;
 }

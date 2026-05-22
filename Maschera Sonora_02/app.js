@@ -89,7 +89,6 @@ class StarField {
       { cx: 1119, cy: 750, points: 8, r1: 60, r2: 22, maxScale: 3.8, rotSpeed: 0.45, phase: 1.5 },
       { cx: 60, cy: 1400, points: 6, r1: 70, r2: 26, maxScale: 4.2, rotSpeed: 0.5, phase: 3.0 },
       { cx: 1119, cy: 1450, points: 5, r1: 65, r2: 24, maxScale: 3.5, rotSpeed: 0.4, phase: 0.3 },
-      { cx: 589, cy: 1280, points: 7, r1: 50, r2: 18, maxScale: 3.0, rotSpeed: 0.6, phase: 1.8 },
       { cx: 100, cy: 2100, points: 6, r1: 60, r2: 22, maxScale: 4.0, rotSpeed: 0.3, phase: 2.5 },
       { cx: 1079, cy: 2150, points: 7, r1: 70, r2: 25, maxScale: 3.5, rotSpeed: 0.35, phase: 0.9 },
       { cx: 589, cy: 2496, points: 5, r1: 55, r2: 20, maxScale: 4.5, rotSpeed: 0.5, phase: 1.2 },

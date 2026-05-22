@@ -7,7 +7,7 @@
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #000; overflow: hidden; font-family: monospace; }
-  #drawCanvas { display: block; width: 100vw; height: 100vh; }
+  #drawCanvas { display: block; width: 100vw; height: 100vh; background: #000; }
   #video { position: fixed; top: 12px; right: 12px; width: 160px; height: 120px;
            border-radius: 8px; transform: scaleX(-1); z-index: 10;
            border: 1px solid rgba(255,255,255,0.2); }
@@ -31,12 +31,7 @@
     #help .key { display: inline-block; background: rgba(255,255,255,0.1);
                  padding: 0 5px; border-radius: 4px; font-weight: bold; color: #fff; }
      #help .sep { color: #555; }
-    #exportBtn { position: fixed; bottom: 16px; right: 16px; z-index: 10;
-                 background: rgba(255,255,255,0.12); color: #fff;
-                 border: 1px solid rgba(255,255,255,0.2);
-                 padding: 4px 12px; border-radius: 6px; cursor: pointer;
-                 font: 13px monospace; }
-    #exportBtn:hover { background: rgba(255,255,255,0.25); }
+
 </style>
 </head>
 <body>
@@ -45,20 +40,20 @@
 <canvas id="drawCanvas"></canvas>
 <div id="info">Loading model...</div>
 <div id="status"><span id="colorDot" style="background:#fff"></span> <span id="modeText">Draw</span></div>
-<button id="exportBtn">⬇ Esporta</button>
-
 <div id="help">
   <div class="row">
-    <span><span class="key">☝️</span> Indice → Disegna</span>
+    <span><span class="key">✌️</span> Indice+Medio alzati → Disegna</span>
     <span class="sep">|</span>
-    <span><span class="key">✊</span> Pugno → Gomma</span>
+    <span><span class="key">✊✊</span> Doppio pugno → Gomma</span>
     <span class="sep">|</span>
     <span><span class="key">✋</span> Mano aperta → Stop</span>
   </div>
   <div class="row">
-    <span><span class="key">🤏</span> Pollice+Indice → Colore</span>
+    <span><span class="key">👉👈</span> Indici che si toccano → Colore</span>
     <span class="sep">|</span>
-    <span><span class="key">🔊</span> Rumore forte → Pulisci tutto</span>
+    <span><span class="key">🤚</span> Indice + palmo opposto → Anima</span>
+    <span class="sep">|</span>
+    <span><span class="key">👌</span> OK (3s) → Esporta SVG</span>
   </div>
 </div>
 
@@ -91,26 +86,17 @@ function resizeCanvas() {
 window.addEventListener('resize', resizeCanvas);
 resizeCanvas();
 
-const exportBtn = document.getElementById('exportBtn');
-if (exportBtn) {
-  exportBtn.addEventListener('click', () => {
-    const link = document.createElement('a');
-    link.download = 'marionetta-' + Date.now() + '.png';
-    link.href = buffer.toDataURL();
-    link.click();
-  });
-}
 const TIP = { thumb: 4, index: 8, middle: 12, ring: 16, pinky: 20 };
 const MCP = { index: 5, middle: 9, ring: 13, pinky: 17 };
 
-const ACTIVATE_THRESHOLD = 0.035;
-
+const INDEX_TOUCH_DIST = 35;
 const MIN_MOVE_DIST = 8;
 
 const buffer = document.createElement('canvas');
 const bufCtx = buffer.getContext('2d');
 let committedSegments = [];
 let skeletonHands = {};
+let skeletonAges = {};
 
 const handStates = {};
 
@@ -193,8 +179,8 @@ function drawSkeleton(kp) {
       ctx.beginPath();
       ctx.moveTo(p0.x, p0.y);
       ctx.lineTo(p1.x, p1.y);
-      ctx.strokeStyle = 'rgba(255,255,255,0.25)';
-      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = 'rgba(255,255,255,0.6)';
+      ctx.lineWidth = 2.5;
       ctx.stroke();
     }
   }
@@ -202,8 +188,8 @@ function drawSkeleton(kp) {
     if (!pt) continue;
     const p = scale2D(pt.x, pt.y);
     ctx.beginPath();
-    ctx.arc(p.x, p.y, 3, 0, Math.PI * 2);
-    ctx.fillStyle = 'rgba(255,255,255,0.4)';
+    ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
     ctx.fill();
   }
   ctx.restore();
@@ -211,7 +197,14 @@ function drawSkeleton(kp) {
 
 function render() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
-  ctx.drawImage(buffer, 0, 0);
+  if (animActive) {
+    animTime += 0.03;
+    for (const seg of committedSegments) {
+      drawAnimatedSegment(ctx, seg, animTime);
+    }
+  } else {
+    ctx.drawImage(buffer, 0, 0);
+  }
   for (const kp of Object.values(skeletonHands)) {
     drawSkeleton(kp);
   }
@@ -237,6 +230,23 @@ function drawSegmentOnCanvas(context, segment) {
   }
 }
 
+function drawAnimatedSegment(context, segment, time) {
+  for (let i = 1; i < segment.length; i++) {
+    const p0 = segment[i - 1];
+    const p1 = segment[i];
+    const w0 = Math.sin(p0.x * 0.008 + time) * 12;
+    const w1 = Math.sin(p1.x * 0.008 + time) * 12;
+    context.beginPath();
+    context.moveTo(p0.x, p0.y + w0);
+    context.lineTo(p1.x, p1.y + w1);
+    context.strokeStyle = p1.color;
+    context.lineWidth = p1.width;
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.stroke();
+  }
+}
+
 function dist3D(a, b) {
   const dz = (a.z !== undefined && b.z !== undefined) ? (a.z - b.z)**2 : 0;
   return Math.sqrt((a.x - b.x)**2 + (a.y - b.y)**2 + dz);
@@ -244,20 +254,32 @@ function dist3D(a, b) {
 
 function startWebcam() {
   return navigator.mediaDevices.getUserMedia({
-    video: { width: 640, height: 480, facingMode: 'user' },
-    audio: true
+    video: { width: 640, height: 480, facingMode: 'user' }
   }).then(stream => {
     video.srcObject = stream;
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    if (audioCtx.state === 'suspended') audioCtx.resume();
-    const source = audioCtx.createMediaStreamSource(stream);
-    const analyser = audioCtx.createAnalyser();
-    analyser.fftSize = 256;
-    source.connect(analyser);
-    window._audioAnalyser = analyser;
     return video.play();
   });
 }
+
+function exportSVG() {
+  const parts = [];
+  parts.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${canvas.width}" height="${canvas.height}">`);
+  parts.push(`<rect width="100%" height="100%" fill="#000"/>`);
+  for (const seg of committedSegments) {
+    if (seg.length < 2) continue;
+    const color = seg[0].color || '#ffffff';
+    const d = seg.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ');
+    parts.push(`<path d="${d}" stroke="${color}" stroke-width="${seg[0].width || 6}" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`);
+  }
+  parts.push('</svg>');
+  const blob = new Blob([parts.join('\n')], { type: 'image/svg+xml' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'marionetta-' + Date.now() + '.svg';
+  a.click();
+}
+
+
 
 async function loadDetector(retries = 1) {
   const model = handPoseDetection.SupportedModels.MediaPipeHands;
@@ -291,30 +313,37 @@ async function main() {
 
 const MODE = { IDLE: 'idle', DRAW: 'draw', ERASER: 'eraser' };
 let canChangeColor = true;
+let canExport = true;
+const OK_HOLD_FRAMES = 90;
+let okHoldTimer = 0;
+let animTimer = 0;
+let animActive = false;
+let animTime = 0;
+let canToggle = true;
+const smoothCache = {};
+
+function smoothKp(id, kp, factor) {
+  if (!smoothCache[id]) smoothCache[id] = [];
+  const cache = smoothCache[id];
+  for (let i = 0; i < kp.length; i++) {
+    if (!kp[i]) continue;
+    if (!cache[i] || Math.abs(kp[i].x - cache[i].x) > 15 || Math.abs(kp[i].y - cache[i].y) > 15) {
+      cache[i] = { x: kp[i].x, y: kp[i].y };
+    } else {
+      cache[i].x += (kp[i].x - cache[i].x) * factor;
+      cache[i].y += (kp[i].y - cache[i].y) * factor;
+    }
+  }
+  return cache;
+}
 
 const COLORS = ['#ffffff', '#ff0000', '#0066ff', '#00cc44', '#ff8800'];
 let colorIndex = 0;
 let currentColor = COLORS[0];
 
-const LOUD_THRESHOLD = 0.4;
-const CLEAR_COOLDOWN_FRAMES = 90;
-let clearCooldown = 0;
-let clearFlash = 0;
-
-function clearAll() {
-  committedSegments = [];
-  bufCtx.clearRect(0, 0, buffer.width, buffer.height);
-  for (const s of Object.values(handStates)) {
-    if (s.active) finalizeSegment(s);
-  }
-  clearFlash = 60;
-}
-
 function processHands(hands) {
   const seenIds = new Set();
-  let anyColorPinch = false;
-  skeletonHands = {};
-  let anyOpen = false;
+  const gestureData = [];
 
   for (const hand of hands) {
     const id = hand.handedness;
@@ -325,55 +354,158 @@ function processHands(hands) {
 
     if (!kp || !Array.isArray(kp) || kp.length < 21) continue;
 
-    skeletonHands[id] = kp;
+    skeletonHands[id] = smoothKp(id, kp, id === 'Left' ? 0.15 : 0.3);
+    skeletonAges[id] = 0;
     if (!kp3d || !Array.isArray(kp3d) || kp3d.length < 5) kp3d = kp;
 
     const thumbTip = kp3d[TIP.thumb];
     const indexTip = kp3d[TIP.index];
 
     const fingers = ['index', 'middle', 'ring', 'pinky'];
-    const isFist = fingers.every(f => kp[TIP[f]] && kp[MCP[f]] && kp[TIP[f]].y > kp[MCP[f]].y);
     const isOpen = fingers.every(f => kp[TIP[f]] && kp[MCP[f]] && kp[TIP[f]].y < kp[MCP[f]].y);
 
-    // --- OPEN HAND → stop ---
-    if (isOpen) {
-      anyOpen = true;
+    const isIndexMiddleUp = !isOpen &&
+      kp[TIP.index] && kp[MCP.index] && kp[TIP.index].y < kp[MCP.index].y &&
+      kp[TIP.middle] && kp[MCP.middle] && kp[TIP.middle].y < kp[MCP.middle].y &&
+      kp[TIP.ring] && kp[MCP.ring] && kp[TIP.ring].y > kp[MCP.ring].y &&
+      kp[TIP.pinky] && kp[MCP.pinky] && kp[TIP.pinky].y > kp[MCP.pinky].y;
+
+    const isFist = !isIndexMiddleUp && fingers.every(f => kp[TIP[f]] && kp[MCP[f]] && kp[TIP[f]].y > kp[MCP[f]].y);
+
+    const isOK = kp[TIP.thumb] && kp[TIP.index] &&
+      dist2D(scale2D(kp[TIP.thumb].x, kp[TIP.thumb].y), scale2D(kp[TIP.index].x, kp[TIP.index].y)) < 50;
+
+    gestureData.push({ id, kp, state, isFist, isOpen, isIndexMiddleUp, isOK, thumbTip, indexTip });
+  }
+
+  const handCount = gestureData.length;
+  const allFists = handCount === 2 && gestureData.every(g => g.isFist);
+  const anyOpen = gestureData.some(g => g.isOpen);
+
+  const anyOK = gestureData.some(g => g.isOK);
+  const anyDrawing = gestureData.some(g => g.isIndexMiddleUp);
+
+  // --- Persist skeletons — remove only if unseen for 10+ frames ---
+  for (const id of Object.keys(skeletonHands)) {
+    if (!seenIds.has(id)) {
+      skeletonAges[id] = (skeletonAges[id] || 0) + 1;
+      if (skeletonAges[id] > 10) {
+        delete skeletonHands[id];
+        delete skeletonAges[id];
+      }
+    }
+  }
+
+  let handsClose = false;
+  if (handCount === 2) {
+    const w0 = gestureData[0].kp[0];
+    const w1 = gestureData[1].kp[0];
+    const wristsFar = w0 && w1 && dist2D(scale2D(w0.x, w0.y), scale2D(w1.x, w1.y)) > 80;
+    if (wristsFar) {
+      const idx0 = gestureData[0].kp[TIP.index];
+      const idx1 = gestureData[1].kp[TIP.index];
+      if (idx0 && idx1) {
+        const p0 = scale2D(idx0.x, idx0.y);
+        const p1 = scale2D(idx1.x, idx1.y);
+        if (dist2D(p0, p1) < INDEX_TOUCH_DIST) handsClose = true;
+      }
+    }
+  }
+
+// --- INDEX TOUCHES OPPOSITE PALM → toggle animation (hold 1s) ---
+  if (handCount === 2) {
+    const [h0, h1] = gestureData;
+    const w0 = h0.kp[0];
+    const w1 = h1.kp[0];
+    const wristsFar = w0 && w1 && dist2D(scale2D(w0.x, w0.y), scale2D(w1.x, w1.y)) > 200;
+    if (wristsFar) {
+      const touch = (h0.kp[TIP.index] && h1.kp[0] && dist2D(scale2D(h0.kp[TIP.index].x, h0.kp[TIP.index].y), scale2D(h1.kp[0].x, h1.kp[0].y)) < 40) ||
+                    (h1.kp[TIP.index] && h0.kp[0] && dist2D(scale2D(h1.kp[TIP.index].x, h1.kp[TIP.index].y), scale2D(h0.kp[0].x, h0.kp[0].y)) < 40);
+      if (touch) {
+        animTimer++;
+        if (animTimer >= 30 && canToggle) {
+          animActive = !animActive;
+          canToggle = false;
+          animTimer = 0;
+        }
+      } else {
+        animTimer = 0;
+      }
+      if (!touch) canToggle = true;
+    }
+  }
+
+  for (const g of gestureData) {
+    const { kp, state, isOpen, isIndexMiddleUp } = g;
+
+    if (g.isOK) {
       if (state.active) finalizeSegment(state);
       state.mode = MODE.IDLE;
       continue;
     }
 
-    // --- FIST → eraser ---
-    if (isFist) {
+    if (isOpen) {
       if (state.active) finalizeSegment(state);
-      state.mode = MODE.ERASER;
-      bufCtx.save();
-      bufCtx.globalCompositeOperation = 'destination-out';
-      for (const pt of kp) {
-        if (!pt) continue;
-        const p = scale2D(pt.x, pt.y);
-        const r = 15 * (canvas.width / (video.videoWidth || 640));
-        bufCtx.beginPath(); bufCtx.arc(p.x, p.y, r, 0, Math.PI * 2); bufCtx.fill();
-      }
-      bufCtx.restore();
+      state.mode = MODE.IDLE;
       continue;
     }
 
-    // --- DRAW at index tip ---
-    if (!state.active) startSegment(state);
-    state.mode = MODE.DRAW;
-    const idx = kp[TIP.index];
-    if (idx) {
-      const p = scale2D(idx.x, idx.y);
-      if (!state.lastPos || dist2D(p, state.lastPos) >= MIN_MOVE_DIST) {
-        state.segment.push({ x: p.x, y: p.y, width: 6, color: currentColor });
-        state.lastPos = p;
+    if (allFists) {
+      if (state.active) finalizeSegment(state);
+      state.mode = MODE.ERASER;
+      const eraserPoints = [0, 5, 9, 13, 17];
+      const eraserR = 25 * (canvas.width / (video.videoWidth || 640));
+      const eraserR2 = eraserR * eraserR;
+      const centers = [];
+      for (const idx of eraserPoints) {
+        const pt = kp[idx];
+        if (!pt) continue;
+        const p = scale2D(pt.x, pt.y);
+        centers.push(p);
       }
+      // Erase from buffer (for static mode)
+      bufCtx.save();
+      bufCtx.globalCompositeOperation = 'destination-out';
+      for (const c of centers) { bufCtx.beginPath(); bufCtx.arc(c.x, c.y, eraserR, 0, Math.PI * 2); bufCtx.fill(); }
+      bufCtx.restore();
+      // Erase from committedSegments (for animation mode)
+      for (let s = 0; s < committedSegments.length; s++) {
+        const seg = committedSegments[s];
+        committedSegments[s] = seg.filter(pt => {
+          for (const c of centers) {
+            const dx = pt.x - c.x, dy = pt.y - c.y;
+            if (dx * dx + dy * dy <= eraserR2) return false;
+          }
+          return true;
+        });
+      }
+      committedSegments = committedSegments.filter(seg => seg.length >= 2);
+      continue;
     }
 
-    // --- COLOR (thumb+index) ---
-    const dTI = dist3D(thumbTip, indexTip);
-    if (dTI < ACTIVATE_THRESHOLD) anyColorPinch = true;
+    if (isIndexMiddleUp) {
+      if (!state.active) startSegment(state);
+      state.mode = MODE.DRAW;
+
+      const idx = kp[TIP.index];
+      if (idx) {
+        const p = scale2D(idx.x, idx.y);
+        if (!state.lastPos || dist2D(p, state.lastPos) >= MIN_MOVE_DIST) {
+          state.segment.push({ x: p.x, y: p.y, width: 6, color: currentColor });
+          state.lastPos = p;
+        }
+      }
+
+      const mid = kp[TIP.middle];
+      if (mid) {
+        const p = scale2D(mid.x, mid.y);
+        state.segment.push({ x: p.x, y: p.y, width: 6, color: currentColor });
+      }
+      continue;
+    }
+
+    if (state.active) finalizeSegment(state);
+    state.mode = MODE.IDLE;
   }
 
   if (anyOpen) {
@@ -381,7 +513,7 @@ function processHands(hands) {
   }
 
   // --- GLOBAL COLOR CHANGE ---
-  if (anyColorPinch && canChangeColor) {
+  if (handsClose && canChangeColor) {
     for (const s of Object.values(handStates)) {
       if (s.active) finalizeSegment(s);
     }
@@ -390,7 +522,20 @@ function processHands(hands) {
     colorDot.style.background = currentColor;
     canChangeColor = false;
   }
-  if (!anyColorPinch) canChangeColor = true;
+  if (!handsClose) canChangeColor = true;
+
+  // --- EXPORT on OK gesture (hold): SVG or GIF ---
+  if (anyOK && !anyDrawing) {
+    okHoldTimer++;
+    if (okHoldTimer >= OK_HOLD_FRAMES && canExport) {
+      canExport = false;
+      okHoldTimer = 0;
+      exportSVG();
+    }
+  } else if (okHoldTimer > 0) {
+    okHoldTimer = Math.max(0, okHoldTimer - 5);
+  }
+  if (!anyOK) canExport = true;
 
   // --- Finalize segments for lost hands ---
   for (const id of Object.keys(handStates)) {
@@ -401,6 +546,8 @@ function processHands(hands) {
   }
 
   // --- UI ---
+  if (anyOK) info.textContent = `OK ${okHoldTimer}/${OK_HOLD_FRAMES}`;
+  else info.textContent = `Hands: ${handCount}`;
   const modes = Object.values(handStates).map(s => s.mode);
   if (modes.includes(MODE.ERASER)) modeText.textContent = 'Eraser';
   else if (modes.includes(MODE.DRAW)) modeText.textContent = 'Draw';
@@ -418,31 +565,12 @@ async function detectLoop(detector) {
     try {
       const hands = await detector.estimateHands(video);
       processHands(hands);
-      if (!clearFlash) info.textContent = `Hands: ${hands.length}`;
+      info.textContent = `Hands: ${hands.length}`;
     } catch (e) {
       console.error('detect error:', e);
     }
     detecting = false;
   }
-  // --- LOUD NOISE → CLEAR ALL ---
-  if (clearCooldown > 0) clearCooldown--;
-  if (clearFlash > 0) clearFlash--;
-  const analyser = window._audioAnalyser;
-  if (analyser && clearCooldown === 0) {
-    const data = new Uint8Array(analyser.frequencyBinCount);
-    analyser.getByteTimeDomainData(data);
-    let sum = 0;
-    for (let i = 0; i < data.length; i++) {
-      const v = (data[i] - 128) / 128;
-      sum += v * v;
-    }
-    const rms = Math.sqrt(sum / data.length);
-    if (rms > LOUD_THRESHOLD) {
-      clearAll();
-      clearCooldown = CLEAR_COOLDOWN_FRAMES;
-    }
-  }
-  if (clearFlash > 0) info.textContent = 'Pulisci!';
   render();
   requestAnimationFrame(() => detectLoop(detector));
 }

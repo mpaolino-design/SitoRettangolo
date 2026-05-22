@@ -38,7 +38,7 @@
       <input type="range" id="h-scale" min="10" max="100" value="50">
 
       <label>Rotazione (°) <span id="rot-val">0</span></label>
-      <input type="range" id="rotation" min="0" max="360" value="0">
+      <input type="range" id="rotation" min="-90" max="90" value="0">
 
       <label>
         <input type="checkbox" id="random-rot">
@@ -60,6 +60,9 @@
         <input type="checkbox" id="inner-fill" checked>
         Inner Fill
       </label>
+
+      <label>Stroke <span id="stroke-val">1</span></label>
+      <input type="range" id="stroke" min="0" max="10" step="0.5" value="1">
 
       <button id="clear-flow">Pulisci</button>
       <button id="download">Scarica SVG</button>

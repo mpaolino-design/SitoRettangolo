@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — Mario Paolino</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    #about-hero {
+      position: relative;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #about-title {
+      position: absolute;
+      top: 1.5rem;
+      left: 1.5rem;
+      z-index: 10;
+      font-family: 'Anton', sans-serif;
+      font-size: 2rem;
+      color: #F2071B;
+    }
+    #about-content {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 10;
+      max-width: 600px;
+      text-align: center;
+      font-family: 'Inter', sans-serif;
+      font-size: 1rem;
+      line-height: 1.7;
+      color: #f5f0eb;
+      padding: 0 2rem;
+    }
+    #about-content p {
+      margin-bottom: 1rem;
+    }
+    #about-content p:last-child {
+      margin-bottom: 0;
+    }
+    #about-content strong {
+      color: #F2071B;
+    }
+    .about-back {
+      position: absolute;
+      bottom: 3rem;
+      left: 1.5rem;
+      z-index: 10;
+      font-family: 'Anton', sans-serif;
+      font-size: 1.5rem;
+      color: #F2071B;
+      text-decoration: none;
+      border: 2px solid #F2071B;
+      border-radius: 999px;
+      padding: 0.3rem 1rem;
+      transition: background 0.2s, color 0.2s;
+    }
+    .about-back:hover {
+      background: #F2071B;
+      color: #F2E0BD;
+    }
+  </style>
+</head>
+<body>
+  <svg class="noise-filter" aria-hidden="true">
+    <filter id="noise">
+      <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="3" stitchTiles="stitch"/>
+      <feColorMatrix type="saturate" values="0"/>
+    </filter>
+  </svg>
+
+  <section id="about-hero">
+    <div id="about-title">About</div>
+    <div id="about-content">
+      <p>Sito sviluppato durante il workshop <strong>"No brain, No Gain"</strong>,<br>
+      tenuto da <strong>whateverDev</strong> (Andrea Maffei &amp; Rocco Lorenzo Modugno),<br>
+      18-22 Maggio 2026, all'interno dei corsi:</p>
+      <p><strong>Interaction Design 2</strong><br>
+      Prof. Alessia Scudieri</p>
+      <p><strong>Interaction Design 3</strong><br>
+      Prof. Andrea Leonardi<br>
+      Prof. Marcantonio D'Antoni</p>
+      <p><strong>ABADIR</strong><br>
+      Accademia di Design e Comunicazione Visiva<br>
+      Sant'Agata li Battiati CT<br>
+      AA 2025-26</p>
+    </div>
+    <a class="about-back" href="index.html">&larr;</a>
+  </section>
+</body>
+</html>

@@ -27,6 +27,7 @@
   const rotVal = $('rot-val');
   const gapVal = $('gap-val');
   const innerProbVal = $('inner-prob-val');
+  const strokeVal = $('stroke-val');
 
   const FLOW_BASE = 80;
   const FLOW_MIN_DIST = 8;
@@ -52,6 +53,7 @@
       continuous,
       innerProb: parseInt(innerProbInp.value, 10) / 100,
       innerFill: innerFillInp.checked,
+      stroke: parseFloat($('stroke').value),
     };
   }
 
@@ -102,14 +104,14 @@
   }
 
   function renderRects(rects, params, svgW, svgH) {
-    const strokeW = 1;
-    let content = `<svg id="canvas" xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}">`;
+    const strokeW = params.stroke;
+    let content = `<svg id="canvas" xmlns="http://www.w3.org/2000/svg" width="${svgW}" height="${svgH}" viewBox="0 0 ${svgW} ${svgH}"><rect width="100%" height="100%" fill="#fff"/>`;
 
     for (const r of rects) {
       const x = r.cx - r.w / 2;
       const y = r.cy - r.h / 2;
 
-      let tag = `<rect x="${x}" y="${y}" width="${r.w}" height="${r.h}" fill="none" stroke="white" stroke-width="${strokeW}"`;
+      let tag = `<rect x="${x}" y="${y}" width="${r.w}" height="${r.h}" fill="none" stroke="black" stroke-width="${strokeW}"`;
 
       if (r.rot !== 0) {
         tag += ` transform="rotate(${r.rot} ${r.cx} ${r.cy})"`;
@@ -122,8 +124,8 @@
         const ih = r.h * 0.5;
         const ix = r.cx - iw / 2;
         const iy = r.cy - ih / 2;
-        const fill = params.innerFill ? 'white' : 'none';
-        tag += `<rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" fill="${fill}" stroke="white" stroke-width="${strokeW}"`;
+        const fill = params.innerFill ? 'black' : 'none';
+        tag += `<rect x="${ix}" y="${iy}" width="${iw}" height="${ih}" fill="${fill}" stroke="black" stroke-width="${strokeW}"`;
         if (r.rot !== 0) {
           tag += ` transform="rotate(${r.rot} ${r.cx} ${r.cy})"`;
         }
@@ -175,6 +177,7 @@
   bindSlider(rotInp, rotVal);
   bindSlider(gapInp, gapVal);
   bindSlider(innerProbInp, innerProbVal);
+  bindSlider($('stroke'), strokeVal);
 
   bindCheckbox(randomRotInp);
   bindCheckbox(continuousInp);

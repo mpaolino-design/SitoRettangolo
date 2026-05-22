@@ -28,13 +28,14 @@ projects.forEach((text) => {
     trails.push({ el: tr, x: 0, y: 0 });
   }
 
+  const heroRect = document.getElementById('hero').getBoundingClientRect();
   const speed = 1 + Math.random() * 1.5;
   names.push({
     el,
     trails,
     trailIndex: 0,
-    x: Math.random() * window.innerWidth,
-    y: Math.random() * window.innerHeight,
+    x: Math.random() * heroRect.width,
+    y: Math.random() * heroRect.height,
     vx: (Math.random() > 0.5 ? 1 : -1) * speed,
     vy: (Math.random() > 0.5 ? 1 : -1) * speed,
     glow: 0,
@@ -53,17 +54,18 @@ document.addEventListener('mousedown', (e) => {
   const n = names.find((x) => x.el === nameEl);
   if (!n) return;
   dragTarget = n;
-  const rect = nameEl.getBoundingClientRect();
-  dragOffX = e.clientX - rect.left;
-  dragOffY = e.clientY - rect.top;
+  const heroRect = document.getElementById('hero').getBoundingClientRect();
+  dragOffX = e.clientX - heroRect.left - n.x;
+  dragOffY = e.clientY - heroRect.top - n.y;
   n.vx = 0;
   n.vy = 0;
 });
 
 document.addEventListener('mousemove', (e) => {
   if (!dragTarget) return;
-  dragTarget.x = e.clientX - dragOffX;
-  dragTarget.y = e.clientY - dragOffY;
+  const heroRect = document.getElementById('hero').getBoundingClientRect();
+  dragTarget.x = e.clientX - heroRect.left - dragOffX;
+  dragTarget.y = e.clientY - heroRect.top - dragOffY;
 });
 
 document.addEventListener('mouseup', () => {
@@ -114,8 +116,10 @@ title.addEventListener('mousemove', (e) => {
 });
 
 function animateFloating() {
-  const w = window.innerWidth;
-  const h = window.innerHeight;
+  const hero = document.getElementById('hero');
+  const heroRect = hero.getBoundingClientRect();
+  const w = heroRect.width;
+  const h = heroRect.height;
 
   names.forEach((n) => {
     if (speedMult > 1) {
@@ -233,14 +237,16 @@ const cardData = [
 
 const grid = document.getElementById('spheres-grid');
 
-const cw = 200, ch = 200;
+const cw = 140, ch = 140;
 const circs = [];
+
+const svgPath = 'M360.35,421.92l10.12-.97-10.12-.97c-9.4-.9-11.43-13.72-2.77-17.48l9.33-4.05-9.93,2.2c-9.22,2.05-15.11-9.52-8.04-15.77l7.62-6.74-8.76,5.17c-8.13,4.79-17.31-4.38-12.52-12.52l5.17-8.76-6.74,7.62c-6.25,7.07-17.82,1.18-15.77-8.04l2.2-9.93-4.05,9.33c-3.76,8.66-16.58,6.63-17.48-2.77l-.97-10.12-.97,10.12c-.9,9.4-13.72,11.43-17.48,2.77l-4.05-9.33,2.2,9.93c2.05,9.22-9.52,15.11-15.77,8.04l-6.74-7.62,5.17,8.76c4.79,8.13-4.38,17.31-12.52,12.52l-8.76-5.17,7.62,6.74c7.07,6.25,1.18,17.82-8.04,15.77l-9.93-2.2,9.33,4.05c8.66,3.76,6.63,16.58-2.77,17.48l-10.12.97,10.12.97c9.4.9,11.43,13.72,2.77,17.48l-9.33,4.05,9.93-2.2c9.22-2.05,15.11,9.52,8.04,15.77l-7.62,6.74,8.76-5.17c8.13-4.79,17.31,4.38,12.52,12.52l-5.17,8.76,6.74-7.62c6.25-7.07,17.82-1.18,15.77,8.04l-2.2,9.93,4.05-9.33c3.76-8.66,16.58-6.63,17.48,2.77l.97,10.12.97-10.12c.9-9.4,13.72-11.43,17.48-2.77l4.05,9.33-2.2-9.93c-2.05-9.22,9.52-15.11,15.77-8.04l6.74,7.62-5.17-8.76c-4.79-8.13,4.38-17.31,12.52-12.52l8.76,5.17-7.62-6.74c-7.07-6.25-1.18-17.82,8.04-15.77l9.93,2.2-9.33-4.05c-8.66-3.76-6.63-16.58,2.77-17.48ZM334.11,432.8c-6.25-1.39-10.24,6.45-5.45,10.69-5.51-3.25-11.73,2.97-8.48,8.48-4.24-4.79-12.08-.8-10.69,5.45h0c-2.55-5.87-11.24-4.49-11.85,1.88-.61-6.37-9.3-7.75-11.85-1.88,1.39-6.25-6.45-10.24-10.69-5.45,3.25-5.51-2.97-11.73-8.48-8.48,4.79-4.24.8-12.08-5.45-10.69,5.87-2.55,4.49-11.24-1.88-11.85,6.37-.61,7.75-9.3,1.88-11.85,6.25,1.39,10.24-6.45,5.45-10.69,5.51,3.25,11.73-2.97,8.48-8.48,4.24,4.79,12.08.8,10.69-5.45,2.55,5.87,11.24,4.49,11.85-1.88.61,6.37,9.3,7.75,11.85,1.88h0s0,0,0,0c-1.39,6.25,6.45,10.24,10.69,5.45-3.25,5.51,2.97,11.73,8.48,8.48-4.79,4.24-.8,12.08,5.45,10.69-5.87,2.55-4.49,11.24,1.88,11.85-6.37.61-7.75,9.3-1.88,11.85Z';
 
 cardData.forEach((d, i) => {
   const card = document.createElement('div');
   card.className = 'card';
-  card.style.setProperty('--card-color', cardColors[i % cardColors.length]);
-  card.innerHTML = `<span style="position:relative;z-index:2">${d.name}</span>`;
+  const color = cardColors[i % cardColors.length];
+  card.innerHTML = `<svg viewBox="300 390 90 75" preserveAspectRatio="xMidYMid meet" style="position:absolute;inset:0;width:100%;height:100%;pointer-events:none"><path d="${svgPath}" fill="${color}"/></svg><span style="position:relative;z-index:2;text-align:center;padding:0.5rem;font-size:0.9rem;line-height:1.2">${d.name}</span>`;
   grid.appendChild(card);
   card.addEventListener('click', () => window.open(d.url, '_blank'));
 
@@ -313,7 +319,18 @@ animateCircs();
 
 /* Back-to-top visibility */
 const btnTop = document.querySelector('.btn-top');
-window.addEventListener('scroll', () => {
+const btnScroll = document.querySelector('.btn-scroll');
+const floatingNames = document.getElementById('floating-names');
+
+function updateVisibility() {
+  const hero = document.getElementById('hero');
+  const heroBottom = hero.getBoundingClientRect().bottom;
+  const visible = heroBottom > 0;
   btnTop.style.display = window.scrollY > window.innerHeight * 0.8 ? 'flex' : 'none';
-});
-btnTop.style.display = 'none';
+  btnScroll.style.display = visible ? '' : 'none';
+  floatingNames.style.display = visible ? '' : 'none';
+}
+
+window.addEventListener('scroll', updateVisibility);
+window.addEventListener('resize', updateVisibility);
+updateVisibility();

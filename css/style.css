@@ -60,6 +60,28 @@ body::after {
   z-index: 0;
 }
 
+#about-btn {
+  position: absolute;
+  top: 1.5rem;
+  left: 1.5rem;
+  z-index: 10;
+  font-family: 'Anton', sans-serif;
+  font-size: 1.2rem;
+  color: #F2071B;
+  background: transparent;
+  border: 2px solid #F2071B;
+  border-radius: 999px;
+  padding: 0.6rem 1.6rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, color 0.2s;
+}
+
+#about-btn:hover {
+  background: #F2071B;
+  color: #F2E0BD;
+}
+
 .floating-name {
   position: absolute;
   font-family: 'Anton', sans-serif;
@@ -95,7 +117,7 @@ body::after {
 
 .btn-scroll {
   position: absolute;
-  bottom: 3rem;
+  bottom: 6rem;
   z-index: 1;
   font-family: 'Inter', sans-serif;
   font-size: 1.1rem;
@@ -127,69 +149,23 @@ body::after {
 }
 
 .card {
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
+  width: 140px;
+  height: 140px;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   cursor: pointer;
-  background: var(--card-color);
-  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
   font-family: 'Anton', sans-serif;
   font-size: 1.1rem;
   color: #fff;
-  padding: 1.5rem;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform 0.2s, filter 0.2s;
   position: absolute;
 }
-
-.card::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 340px;
-  height: 340px;
-  border-radius: 50%;
-  background: var(--card-color);
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.2);
-  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.35s ease-out;
-  z-index: 0;
-}
-
-.card:hover::before {
-  transform: translate(-50%, -50%) scale(1);
-  opacity: 0.5;
-}
-
-.card::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 360px;
-  height: 360px;
-  border-radius: 50%;
-  border: 2px solid var(--card-color);
-  opacity: 0;
-  transform: translate(-50%, -50%) scale(0.2);
-  transition: transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) 0.08s, opacity 0.3s ease-out 0.08s;
-  z-index: 0;
-}
-
-.card:hover::after {
-  transform: translate(-50%, -50%) scale(1);
-  opacity: 0.5;
-}
-
-
 
 .card:hover {
   transform: scale(1.08);
-  box-shadow: 0 0 30px rgba(255,255,255,0.2), 0 8px 24px rgba(0,0,0,0.5);
+  filter: drop-shadow(0 0 20px rgba(255,255,255,0.15));
 }
 
 

@@ -31,7 +31,7 @@
   <input type="range" id="sizeSlider" min="0.4" max="1.8" step="0.05" value="1.0">
   <span id="sizeValue">1.0</span>
 </div>
-<canvas id="canvas"></canvas>
+<canvas id="canvas" title="Puoi scrivere solo Martello"></canvas>
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -475,11 +475,11 @@ function loop(time) {
     }
   }
 
-  ctx.fillStyle = 'rgba(255,255,255,0.3)';
-  ctx.font = '16px sans-serif';
+  ctx.fillStyle = '#fff';
+  ctx.font = '22px sans-serif';
   ctx.textAlign = 'center';
   ctx.textBaseline = 'bottom';
-  ctx.fillText('Type "martello" on your keyboard', W / 2, H - 10);
+  ctx.fillText('Puoi scrivere solo Martello', W / 2, H - 10);
 
   ctx.restore();
   requestAnimationFrame(loop);
