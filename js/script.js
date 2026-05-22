@@ -315,11 +315,13 @@ function animateCircs() {
     c.el.style.left = c.x + 'px';
     c.el.style.top = c.y + 'px';
     if (!c.hovered) {
-      const vx = (Math.random() - 0.5) * 3;
-      const vy = (Math.random() - 0.5) * 3;
+      const vx = (Math.random() - 0.5) * 6;
+      const vy = (Math.random() - 0.5) * 6;
       c.el.style.transform = `translate(${vx}px, ${vy}px)`;
+      c.el.style.transition = 'none';
     } else {
       c.el.style.transform = '';
+      c.el.style.transition = '';
     }
   });
 
