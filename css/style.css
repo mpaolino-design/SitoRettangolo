@@ -157,14 +157,14 @@ body::before {
 
 #main-title span {
   display: inline-block;
-  transition: transform 0.15s ease, color 0.15s ease;
-  transition-delay: calc(var(--i) * 12ms);
+  transition: transform 0.3s ease, color 0.15s ease;
+  transition-delay: calc(var(--i) * 10ms);
   cursor: default;
 }
 
-#main-title span:hover {
+#main-title span.deformed {
   transform: translateY(-4px) scale(1.08) rotate(-2deg);
-  transition-delay: 0ms;
+  transition-delay: calc(var(--i) * 10ms);
 }
 
 .btn-scroll {

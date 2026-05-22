@@ -111,6 +111,10 @@ letters.forEach((span) => {
   });
 });
 
+title.addEventListener('mouseenter', () => {
+  letters.forEach((s) => s.classList.toggle('deformed'));
+});
+
 title.addEventListener('mouseleave', () => {
   speedMult = 1;
 });
@@ -267,8 +271,8 @@ cardData.forEach((d, i) => {
   card.addEventListener('click', () => window.open(d.url, '_blank'));
 
   const angle = Math.random() * Math.PI * 2;
-  const vx0 = Math.cos(angle) * (0.8 + Math.random() * 1.2);
-  const vy0 = Math.sin(angle) * (0.8 + Math.random() * 1.2);
+  const vx0 = Math.cos(angle) * (1.2 + Math.random() * 2);
+  const vy0 = Math.sin(angle) * (1.2 + Math.random() * 2);
   const circ = {
     el: card,
     x: 0, y: 0,
@@ -296,7 +300,7 @@ function animateCircs() {
     if (!c.hovered) {
       c.vx += (Math.random() - 0.5) * 0.15;
       c.vy += (Math.random() - 0.5) * 0.15;
-      const maxSp = 2.5;
+      const maxSp = 4;
       const sp = Math.sqrt(c.vx * c.vx + c.vy * c.vy);
       if (sp > maxSp) {
         c.vx = (c.vx / sp) * maxSp;
