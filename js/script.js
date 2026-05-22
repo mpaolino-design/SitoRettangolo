@@ -162,6 +162,10 @@ function animateFloating() {
 
     n.el.style.transform = `translate(${n.x}px, ${n.y}px)`;
 
+    const speed = Math.sqrt(n.vx * n.vx + n.vy * n.vy) * speedMult;
+    const blur = Math.min(speed * 0.6, 2.5);
+    n.el.style.filter = `blur(${blur}px)`;
+
     n.trails[n.trailIndex].x = n.x;
     n.trails[n.trailIndex].y = n.y;
     n.trailIndex = (n.trailIndex + 1) % n.trails.length;
@@ -170,6 +174,7 @@ function animateFloating() {
   names.forEach((n) => {
     n.trails.forEach((tr) => {
       tr.el.style.transform = `translate(${tr.x}px, ${tr.y}px)`;
+      tr.el.style.filter = n.el.style.filter;
     });
     n.el.classList.remove('colliding');
   });
