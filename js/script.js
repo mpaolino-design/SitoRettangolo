@@ -276,8 +276,8 @@ cardData.forEach((d, i) => {
     placed: false,
     hovered: false,
   };
-  card.addEventListener('mouseenter', () => { circ.hovered = true; circ.vx = 0; circ.vy = 0; });
-  card.addEventListener('mouseleave', () => { circ.vx = vx0; circ.vy = vy0; circ.hovered = false; });
+  card.addEventListener('mouseenter', () => { circ.hovered = true; circ.vx = 0; circ.vy = 0; card.style.zIndex = 10; });
+  card.addEventListener('mouseleave', () => { circ.vx = vx0; circ.vy = vy0; circ.hovered = false; card.style.zIndex = ''; });
   circs.push(circ);
 });
 
