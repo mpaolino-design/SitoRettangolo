@@ -267,15 +267,17 @@ cardData.forEach((d, i) => {
   card.addEventListener('click', () => window.open(d.url, '_blank'));
 
   const angle = Math.random() * Math.PI * 2;
+  const vx0 = Math.cos(angle) * (0.8 + Math.random() * 1.2);
+  const vy0 = Math.sin(angle) * (0.8 + Math.random() * 1.2);
   const circ = {
     el: card,
     x: 0, y: 0,
-    vx: 0, vy: 0,
+    vx: vx0, vy: vy0,
     placed: false,
     hovered: false,
   };
   card.addEventListener('mouseenter', () => { circ.hovered = true; circ.vx = 0; circ.vy = 0; });
-  card.addEventListener('mouseleave', () => { circ.hovered = false; });
+  card.addEventListener('mouseleave', () => { circ.vx = vx0; circ.vy = vy0; circ.hovered = false; });
   circs.push(circ);
 });
 
@@ -292,13 +294,13 @@ function animateCircs() {
     }
 
     if (!c.hovered) {
-      c.vx += (Math.random() - 0.5) * 0.3;
-      c.vy += (Math.random() - 0.5) * 0.3;
-      const maxTremble = 0.5;
+      c.vx += (Math.random() - 0.5) * 0.15;
+      c.vy += (Math.random() - 0.5) * 0.15;
+      const maxSp = 2.5;
       const sp = Math.sqrt(c.vx * c.vx + c.vy * c.vy);
-      if (sp > maxTremble) {
-        c.vx = (c.vx / sp) * maxTremble;
-        c.vy = (c.vy / sp) * maxTremble;
+      if (sp > maxSp) {
+        c.vx = (c.vx / sp) * maxSp;
+        c.vy = (c.vy / sp) * maxSp;
       }
       c.x += c.vx;
       c.y += c.vy;
