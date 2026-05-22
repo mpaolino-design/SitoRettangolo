@@ -314,6 +314,13 @@ function animateCircs() {
 
     c.el.style.left = c.x + 'px';
     c.el.style.top = c.y + 'px';
+    if (!c.hovered) {
+      const vx = (Math.random() - 0.5) * 3;
+      const vy = (Math.random() - 0.5) * 3;
+      c.el.style.transform = `translate(${vx}px, ${vy}px)`;
+    } else {
+      c.el.style.transform = '';
+    }
   });
 
   for (let i = 0; i < circs.length; i++) {
