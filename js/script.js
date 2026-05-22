@@ -15,14 +15,26 @@ const trailCount = 4;
 projects.forEach((text) => {
   const el = document.createElement('div');
   el.className = 'floating-name';
-  el.textContent = text;
+  text.split('').forEach((ch, i) => {
+    const span = document.createElement('span');
+    span.className = 'letter';
+    span.textContent = ch === ' ' ? '\u00A0' : ch;
+    span.style.setProperty('--i', i);
+    el.appendChild(span);
+  });
   container.appendChild(el);
 
   const trails = [];
   for (let t = 0; t < trailCount; t++) {
     const tr = document.createElement('div');
     tr.className = 'floating-name trail';
-    tr.textContent = text;
+    text.split('').forEach((ch, i) => {
+      const span = document.createElement('span');
+      span.className = 'letter';
+      span.textContent = ch === ' ' ? '\u00A0' : ch;
+      span.style.setProperty('--i', i);
+      tr.appendChild(span);
+    });
     tr.style.opacity = 0.06 * (1 - t / (trailCount + 1));
     container.appendChild(tr);
     trails.push({ el: tr, x: 0, y: 0 });

@@ -105,6 +105,27 @@ body::after {
   opacity: 0.3;
 }
 
+.floating-name .letter {
+  display: inline-block;
+  transition: transform 0.2s ease, color 0.2s ease;
+  transition-delay: calc(var(--i) * 20ms);
+  cursor: grab;
+}
+
+.floating-name:hover .letter {
+  transform: translateY(-6px) scale(1.12);
+  color: #F2071B;
+  transition-delay: calc(var(--i) * 25ms);
+}
+
+.floating-name .letter:active {
+  transform: translateY(-10px) scale(1.2);
+}
+
+.floating-name.trail .letter {
+  cursor: default;
+}
+
 #main-title {
   position: relative;
   z-index: 1;
